@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Carga de Datos - Scout Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .section { margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
+        input, select { width: 100%; padding: 8px; margin: 5px 0; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <h1>Cargar Datos</h1>
+    
+    <!-- Formulario Manual -->
+    <div class="section">
+        <h2>Ingreso Manual</h2>
+        <form action="/generar" method="POST">
+            <input type="text" name="nombres" placeholder="Nombres" required>
+            <input type="text" name="cedula" placeholder="Cédula" required>
+            <input type="text" name="grupo" placeholder="Grupo" required>
+            <input type="text" name="distrito" placeholder="Distrito" required>
+            <input type="text" name="region" placeholder="Región" required>
+            <button type="submit">Generar Reconocimiento</button>
+        </form>
+    </div>
+
+    <!-- Subida de CSV -->
+    <div class="section">
+        <h2>Subir CSV</h2>
+        <form action="/cargar-csv" method="POST" enctype="multipart/form-data">
+            <input type="file" name="csv" accept=".csv" required>
+            <button type="submit">Subir CSV</button>
+        </form>
+    </div>
+</body>
+</html>

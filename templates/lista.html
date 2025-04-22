@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reconocimientos - Scout Manager</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+      }
+      .filters {
+        margin-bottom: 20px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+      a {
+        color: #2196f3;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Reconocimientos Generados</h1>
+
+    <!-- Filtros -->
+    <div class="filters">
+      <select id="filter-region">
+        <option value="">Todas las Regiones</option>
+        <option>Norte</option>
+        <option>Sur</option>
+      </select>
+      <input type="text" id="search" placeholder="Buscar por cédula..." />
+    </div>
+
+    <!-- Tabla de Resultados -->
+    <!-- Actualizar sección del cuerpo de la tabla -->
+    <tbody>
+      {% for reconocimiento in reconocimientos %}
+      <tr>
+        <td>{{ reconocimiento[1] }}</td>
+        <!-- Código -->
+        <td>{{ reconocimiento[3] }}</td>
+        <!-- Nombre -->
+        <td>{{ reconocimiento[4] }}</td>
+        <!-- Cédula -->
+        <td>{{ reconocimiento[5] }}</td>
+        <!-- Grupo -->
+        <td>{{ reconocimiento[6] }}</td>
+        <!-- Distrito -->
+        <td>
+          <a href="/output/{{ reconocimiento[1] }}.pdf" target="_blank"
+            >Descargar</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </body>
+</html>
