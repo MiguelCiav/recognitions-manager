@@ -5,6 +5,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 import config
+from fillpdf import fillpdfs
 
 def generar_codigo_unico():
     intentos = 3
@@ -37,29 +38,21 @@ def generar_codigo_unico():
     raise RuntimeError("Error: No se pudo generar el código después de 3 intentos")
 
 def crear_pdf(codigo_unico, datos):
+
+    fillpdfs.get_form_fields("data/FORMATO_RECONOCIMIENTO.pdf")
+
+    data_dict = {
+        'fecha': datos['fecha_creacion'],
+        'codigo': codigo_unico,
+        'nombre': datos["nombres"],
+        'grupo': datos["grupo"],
+        'distrito': datos["distrito"],
+        'region': datos["region"],
+    }
+
+    fillpdfs.write_fillable_pdf('data/FORMATO_RECONOCIMIENTO.pdf', f"output/{codigo_unico}.pdf", data_dict)
+    fillpdfs.flatten_pdf(f"output/{codigo_unico}.pdf", f"output/{codigo_unico}.pdf", as_images=True)
+
     pdf_path = f"output/{codigo_unico}.pdf"
-    c = canvas.Canvas(pdf_path, pagesize=A4)
-    
-    # Campos principales (dos columnas)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, 700, "Nombre:")
-    c.drawString(300, 700, "Cédula:")
-    c.setFont("Helvetica", 12)
-    c.drawString(50, 680, datos["nombres"])
-    c.drawString(300, 680, datos["cedula"])
-    
-    # Segunda fila de campos
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, 650, "Grupo:")
-    c.drawString(300, 650, "Distrito:")
-    c.setFont("Helvetica", 12)
-    c.drawString(50, 630, datos["grupo"])
-    c.drawString(300, 630, datos["distrito"])
-    
-    # Footer
-    c.setFont("Helvetica-Oblique", 10)
-    c.drawString(50, 50, f"Código: {codigo_unico}")
-    c.drawString(300, 50, f"Fecha: {datos['fecha_creacion']}")
-    
-    c.save()
+
     return pdf_path

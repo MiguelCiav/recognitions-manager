@@ -4,6 +4,8 @@ import sqlite3
 from datetime import datetime
 from database import crear_tablas
 from pdf_generator import generar_codigo_unico, crear_pdf
+from io import StringIO
+import unicodedata
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'output'
@@ -29,23 +31,83 @@ def lista_reconocimientos():
 def mostrar_carga():
     return render_template("carga.html")
 
+def normalizar_texto(texto):
+    texto_sin_tildes = unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode()
+    return texto_sin_tildes.strip().lower()
+
+def validar_fila_csv(fila):
+    campos_requeridos = ["nombres", "cedula", "grupo", "distrito", "region"]
+    campos_normalizados = {}
+    
+    # Paso 1: Normalizar claves y valores
+    for k, v in fila.items():
+        clave = unicodedata.normalize('NFKD', k).encode('ASCII', 'ignore').decode().strip().lower()
+        valor = str(v).strip().replace('"', '').strip() if v is not None else ""
+        campos_normalizados[clave] = valor
+    
+    # Paso 2: Validar presencia y no vacío
+    datos = {}
+    for campo in campos_requeridos:
+        if campo not in campos_normalizados:
+            raise ValueError(f"Campo requerido faltante: '{campo}'")  # <-- Nueva validación
+        valor = campos_normalizados[campo]
+        if not valor:
+            raise ValueError(f"Campo requerido vacío: '{campo}'")
+        datos[campo] = valor
+    
+    return datos
+
 # Endpoint para procesar CSV
 @app.route("/cargar-csv", methods=["POST"])
 def procesar_csv():
+    REQUIRED_FIELDS = {"nombres", "cedula", "grupo", "distrito", "region"}
+    
     if 'csv' not in request.files:
         return "No se encontró archivo CSV", 400
     
     archivo = request.files['csv']
-    if not archivo.filename.endswith('.csv'):
-        return "Formato de archivo no válido", 400
-
+    
     try:
-        csv_reader = csv.DictReader(archivo.stream.read().decode('utf-8').splitlines())
-        for fila in csv_reader:
-            procesar_fila(fila)
-        return "CSV procesado exitosamente", 200
+        # Leer y validar estructura básica
+        contenido = archivo.stream.read().decode('utf-8').splitlines()
+        csv_reader = csv.DictReader(contenido)
+        
+        # Validar encabezados
+        encabezados_normalizados = [normalizar_texto(campo) for campo in csv_reader.fieldnames]
+        missing = REQUIRED_FIELDS - set(encabezados_normalizados)
+
+        if missing:
+            return f"Campos requeridos faltantes: {', '.join(missing)}", 400
+        
+        # Procesar filas con registro de errores
+        exitos = 0
+        errores = []
+        
+        for idx, fila in enumerate(csv_reader, start=2):
+            try:
+                # Usar la función de validación
+                datos = validar_fila_csv(fila)
+                generar_y_guardar(datos)
+                exitos += 1
+                
+            except Exception as e:
+                errores.append({
+                    "fila": idx,
+                    "error": str(e),
+                    "datos": fila
+                })
+        
+        # Generar reporte de resultados
+        return jsonify({
+            "exitos": exitos,
+            "errores": errores,
+            "total": exitos + len(errores)  # <- Línea corregida
+        }), 200
+        
+    except UnicodeDecodeError:
+        return "El archivo no es un CSV válido (codificación incorrecta)", 400
     except Exception as e:
-        return f"Error procesando CSV: {str(e)}", 500
+        return f"Error inesperado: {str(e)}", 500
 
 def procesar_fila(fila):
     datos = {
@@ -76,8 +138,53 @@ def mostrar_reportes():
 
 @app.route("/exportar")
 def generar_reporte():
-    # Lógica para generar CSV según filtros
-    pass
+    region = request.args.get('region', '').strip()
+    mes = request.args.get('mes', '').strip()
+
+    conn = sqlite3.connect('data/reconocimientos.db')
+    cursor = conn.cursor()
+    
+    # Construir query dinámica con filtros
+    query = "SELECT codigo_unico, fecha_creacion, nombres, cedula, grupo, distrito, region FROM reconocimientos"
+    params = []
+    
+    conditions = []
+    if region:
+        conditions.append("region = ?")
+        params.append(region)
+    if mes:
+        conditions.append("strftime('%m', fecha_creacion) = ?")
+        params.append(f"{mes.zfill(2)}")  # Asegurar formato MM
+    
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    
+    cursor.execute(query, tuple(params))
+    datos = cursor.fetchall()
+    conn.close()
+
+    # Generar CSV en memoria
+    csv_buffer = StringIO()
+    csv_writer = csv.writer(csv_buffer)
+    
+    # Encabezados
+    csv_writer.writerow([
+        'Código único', 'Fecha', 'Nombres', 
+        'Cédula', 'Grupo', 'Distrito', 'Región'
+    ])
+    
+    # Datos
+    for row in datos:
+        csv_writer.writerow(row)
+    
+    # Configurar respuesta
+    response = app.response_class(
+        csv_buffer.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-disposition': 'attachment; filename=reporte.csv'}
+    )
+    
+    return response
 
 # Función de generación común
 def generar_y_guardar(datos):

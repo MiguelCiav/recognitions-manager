@@ -27,13 +27,54 @@
         color: #2196f3;
         text-decoration: none;
       }
+      /* Estilos para el toast */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 16px;
+        border-radius: 4px;
+        display: none;
+        animation: fadeIn 0.5s, fadeOut 0.5s 2.5s;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes fadeOut {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+      }
     </style>
   </head>
   <body>
     <h1>Reconocimientos Generados</h1>
 
+    <!-- Toast de confirmación -->
+    <div id="toast" class="toast"></div>
+
     <!-- Filtros -->
     <div class="filters">
+      <span class="tooltip">
+        ℹ️
+        <span class="tooltiptext">
+            Filtra por región o escribe parte de una cédula para buscar
+        </span>
+    </span>
       <select id="filter-region">
         <option value="">Todas las Regiones</option>
         <option>Norte</option>
@@ -43,27 +84,72 @@
     </div>
 
     <!-- Tabla de Resultados -->
-    <!-- Actualizar sección del cuerpo de la tabla -->
-    <tbody>
-      {% for reconocimiento in reconocimientos %}
-      <tr>
-        <td>{{ reconocimiento[1] }}</td>
-        <!-- Código -->
-        <td>{{ reconocimiento[3] }}</td>
-        <!-- Nombre -->
-        <td>{{ reconocimiento[4] }}</td>
-        <!-- Cédula -->
-        <td>{{ reconocimiento[5] }}</td>
-        <!-- Grupo -->
-        <td>{{ reconocimiento[6] }}</td>
-        <!-- Distrito -->
-        <td>
-          <a href="/output/{{ reconocimiento[1] }}.pdf" target="_blank"
-            >Descargar</a
-          >
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Cédula</th>
+          <th>Grupo</th>
+          <th>Distrito</th>
+          <th>PDF</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reconocimiento in reconocimientos %}
+        <tr>
+          <td>{{ reconocimiento[1] }}</td>
+          <td>{{ reconocimiento[3] }}</td>
+          <td class="cedula">{{ reconocimiento[4] }}</td>
+          <td>{{ reconocimiento[5] }}</td>
+          <td class="region">{{ reconocimiento[6] }}</td>
+          <td>
+            <a href="/output/{{ reconocimiento[1] }}.pdf" target="_blank"
+              >Descargar</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <script>
+      // Filtro dinámico
+      document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById("search");
+        const regionFilter = document.getElementById("filter-region");
+        const tableRows = document.querySelectorAll("tbody tr");
+
+        function filterTable() {
+          const searchTerm = searchInput.value.toLowerCase();
+          const region = regionFilter.value;
+
+          tableRows.forEach((row) => {
+            const cedula = row
+              .querySelector(".cedula")
+              .textContent.toLowerCase();
+            const regionRow = row.querySelector(".region").textContent;
+            const matchSearch = cedula.includes(searchTerm);
+            const matchRegion = region === "" || regionRow === region;
+
+            row.style.display = matchSearch && matchRegion ? "" : "none";
+          });
+        }
+
+        searchInput.addEventListener("input", filterTable);
+        regionFilter.addEventListener("change", filterTable);
+      });
+
+      // Mostrar toast si hay éxito en la generación
+      const urlParams = new URLSearchParams(window.location.search);
+      const successCount = urlParams.get("success");
+
+      if (successCount) {
+        const toast = document.getElementById("toast");
+        toast.textContent = `✅ Se generaron ${successCount} reconocimientos exitosamente`;
+        toast.style.display = "block";
+        setTimeout(() => (toast.style.display = "none"), 3000);
+      }
+    </script>
   </body>
 </html>
