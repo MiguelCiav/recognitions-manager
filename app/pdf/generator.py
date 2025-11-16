@@ -1,10 +1,7 @@
 import sqlite3
 import time
 from datetime import datetime
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
-import config
 from fillpdf import fillpdfs
 
 def generar_codigo_unico():
@@ -39,7 +36,7 @@ def generar_codigo_unico():
 
 def crear_pdf(codigo_unico, datos):
 
-    fillpdfs.get_form_fields("data/FORMATO_RECONOCIMIENTO.pdf")
+    fillpdfs.get_form_fields("static/FORMATO_RECONOCIMIENTO.pdf")
 
     data_dict = {
         'fecha': datos['fecha_creacion'],
@@ -56,3 +53,27 @@ def crear_pdf(codigo_unico, datos):
     pdf_path = f"output/{codigo_unico}.pdf"
 
     return pdf_path
+
+def generar_y_guardar(datos):
+    try:
+        datos["fecha_creacion"] = datetime.now().strftime("%Y-%m-%d")
+        codigo = generar_codigo_unico()
+        crear_pdf(codigo, datos)
+        
+        conn = sqlite3.connect("data/reconocimientos.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO reconocimientos 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (None, codigo, datos["fecha_creacion"], datos["nombres"], 
+             datos["cedula"], datos["grupo"], datos["distrito"], datos["region"]))
+        conn.commit()
+        
+        return {"status": "success", "codigo": codigo}
+        
+    except Exception as e:
+        conn.rollback()
+        return {"status": "error", "message": str(e)}
+    finally:
+        if 'conn' in locals() and conn:
+            conn.close()

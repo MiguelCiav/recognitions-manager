@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+_LEEME.txt
+test.py
+output/
+data/

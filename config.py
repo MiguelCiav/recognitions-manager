@@ -1,4 +1,12 @@
 import os
+from dotenv import load_dotenv
 
-# Ruta relativa desde la raíz del proyecto
-LOGO_PATH = os.path.join("data", "logo.png")  # Si no existe, se omite en el PDF
+load_dotenv()
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+class Config:
+    DEBUG = True
+    UPLOAD_FOLDER = os.path.join(basedir, 'output')
+    DATABASE_PATH = os.path.join(basedir, 'data', 'reconocimientos.db')
+    SCOUT_USERNAME = os.environ.get('SCOUT_USERNAME')
+    SCOUT_PASSWORD = os.environ.get('SCOUT_PASSWORD')
