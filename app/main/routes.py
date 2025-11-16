@@ -16,8 +16,7 @@ def lista_reconocimientos():
     cursor.execute("SELECT * FROM reconocimientos")
     reconocimientos = cursor.fetchall()
     conn.close()
-    
-    return render_template("lista.html", reconocimientos=reconocimientos)
+    return render_template("home.html", reconocimientos=reconocimientos)
 
 @main_bp.route('/output/<path:filename>')
 def serve_pdf(filename):

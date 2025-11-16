@@ -18,6 +18,10 @@ def create_app():
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
+    # Note: Tailwind/CSS is built by the Vite frontend pipeline and
+    # served as static files from `app/static/dist`. No Flask-side
+    # Tailwind extension is needed here.
+
     @app.before_first_request
     def initialize_database():
         db_path = app.config['DATABASE_PATH']

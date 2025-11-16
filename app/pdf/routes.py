@@ -100,17 +100,6 @@ def generar_reconocimiento():
         'distrito': request.form['distrito'],
         'region': request.form['region']
     }
-    generar_y_guardar(datos)
-    return render_template("carga.html")
-
-
-    datos = {
-        'nombres': request.form['nombres'],
-        'cedula': request.form['cedula'],
-        'grupo': request.form['grupo'],
-        'distrito': request.form['distrito'],
-        'region': request.form['region']
-    }
     db_path = current_app.config['DATABASE_PATH']
     generar_y_guardar(datos, db_path)
     # Redirect back to the charge page
@@ -148,8 +137,3 @@ def generar_y_guardar(datos, db_path):
     finally:
         if conn:
             conn.close()
-
-def normalizar_texto(texto):
-    # Fixed typo: unicodedd -> unicodedata
-    texto_sin_tildes = unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode()
-    return texto_sin_tildes.strip().lower()

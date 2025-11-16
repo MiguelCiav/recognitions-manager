@@ -5,5 +5,17 @@ services:
     ports:
       - "5000:5000"
     volumes:
+      - .:/app
       - ./output:/app/output
       - ./data:/app/data
+  vite:
+    image: node:18
+    working_dir: /app
+    # Install dependencies then start Vite dev server (HMR) for development.
+    command: bash -lc "cd frontend && npm install && npm run dev"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true

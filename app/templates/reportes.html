@@ -1,36 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reportes - Scout Manager</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
-        .report-form { margin-bottom: 20px; }
-        select, button { padding: 8px; margin: 5px; }
-    </style>
-</head>
-<body>
-    <h1>Generar Reportes</h1>
-    
-    <!-- Selectores de Parámetros -->
+{% extends "base.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold text-center mb-4">Generar Reportes</h1>
+
+<!-- Selectores de Parámetros -->
+<div class="bg-white p-6 rounded-lg shadow-md">
     <form class="report-form" action="/exportar" method="GET">
-        <span class="tooltip">
-            ℹ️
-            <span class="tooltiptext">
-                Selecciona parámetros y exporta a CSV para análisis
+        <div class="flex items-center space-x-4">
+            <span class="relative group">
+                <span class="text-gray-400 cursor-help">(?)</span>
+                <span class="absolute bottom-full mb-2 w-64 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Selecciona parámetros y exporta a CSV para análisis
+                </span>
             </span>
-        </span>
-        <select name="region">
-            <option value="">Todas las Regiones</option>
-            <option>Norte</option>
-            <option>Sur</option>
-        </select>
-        <select name="mes">
-            <option value="">Todos los Meses</option>
-            <option>01-2025</option>
-            <option>02-2025</option>
-        </select>
-        <button type="submit">Exportar CSV</button>
+            <select name="region" class="p-2 border border-gray-300 rounded-lg">
+                <option value="">Todas las Regiones</option>
+                <option>Norte</option>
+                <option>Sur</option>
+            </select>
+            <select name="mes" class="p-2 border border-gray-300 rounded-lg">
+                <option value="">Todos los Meses</option>
+                <option>01-2025</option>
+                <option>02-2025</option>
+            </select>
+            <button type="submit" class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Exportar CSV</button>
+        </div>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}

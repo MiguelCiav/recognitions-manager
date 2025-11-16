@@ -6,3 +6,4 @@ fillpdf
 bs4
 python-dotenv
 requests
+# Tailwind build is handled by Vite (node) now; remove Python Tailwind packages
