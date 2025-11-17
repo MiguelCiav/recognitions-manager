@@ -5,10 +5,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # --- Node.js & Tailwind Setup ---
+# --- ADDED 'poppler-utils' TO THIS LINE ---
 RUN apt-get update && \
-    apt-get install -y curl gpg && \
+    apt-get install -y curl gpg nodejs build-essential poppler-utils && \
     curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs build-essential && \
+    apt-get install -y nodejs && \
     # Clean up apt caches
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

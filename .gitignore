@@ -2,3 +2,4 @@ sqlite3.exe
 __pycache__
 data/reconocimientos.db
 .env
+output/*

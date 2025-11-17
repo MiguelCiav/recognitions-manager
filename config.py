@@ -8,6 +8,7 @@ class Config:
     DEBUG = True
     UPLOAD_FOLDER = os.path.join(basedir, 'output')
     DATABASE_PATH = os.path.join(basedir, 'data', 'reconocimientos.db')
+    STATIC_PATH = os.path.join(basedir, 'static')
     SCOUT_USERNAME = os.environ.get('SCOUT_USERNAME')
     SCOUT_PASSWORD = os.environ.get('SCOUT_PASSWORD')
     TAILWIND_BIN = 'npx tailwindcss'

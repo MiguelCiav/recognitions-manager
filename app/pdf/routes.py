@@ -24,7 +24,7 @@ def validar_fila_csv(fila):
     
     # Paso 1: Normalizar claves y valores
     for k, v in fila.items():
-        clave = unicodedata.normalize('NFKD', k).encode('ASCII', 'ignore').decode().strip().lower()
+        clave = unicodedE.normalize('NFKD', k).encode('ASCII', 'ignore').decode().strip().lower()
         valor = str(v).strip().replace('"', '').strip() if v is not None else ""
         campos_normalizados[clave] = valor
     
@@ -61,6 +61,9 @@ def procesar_csv():
         if missing:
             return f"Campos requeridos faltantes: {', '.join(missing)}", 400
         
+        # --- FIX #2: Get db_path ONCE before the loop ---
+        db_path = current_app.config['DATABASE_PATH']
+        
         # Procesar filas con registro de errores
         exitos = 0
         errores = []
@@ -69,7 +72,13 @@ def procesar_csv():
             try:
                 # Usar la función de validación
                 datos = validar_fila_csv(fila)
-                generar_y_guardar(datos)
+                # --- FIX #2: Pass db_path to the function ---
+                resultado = generar_y_guardar(datos, db_path)
+                
+                # Check if the helper function reported an error
+                if resultado.get("status") == "error":
+                    raise Exception(resultado.get("message", "Error desconocido al guardar"))
+                
                 exitos += 1
                 
             except Exception as e:
@@ -101,8 +110,19 @@ def generar_reconocimiento():
         'region': request.form['region']
     }
     db_path = current_app.config['DATABASE_PATH']
-    generar_y_guardar(datos, db_path)
-    # Redirect back to the charge page
+    
+    # --- Store the result from the helper function ---
+    resultado = generar_y_guardar(datos, db_path)
+    
+    # --- Check for errors ---
+    if resultado.get("status") == "error":
+        # We need a way to show this error to the user
+        # For now, let's just print it and reload the page
+        print(f"Error al generar PDF: {resultado.get('message')}")
+        # Ideally, you'd pass this error message to the template
+        return render_template("carga.html", error=resultado.get('message'))
+        
+    # Redirect back to the charge page on success
     return render_template("carga.html")
 
 # --- Helper Functions ---
@@ -112,14 +132,19 @@ def generar_y_guardar(datos, db_path):
     Common function to generate PDF and save to database.
     (This was missing from your app.py)
     """
+
+    conn = None # Initialize conn
     try:
         datos["fecha_creacion"] = datetime.now().strftime("%Y-%m-%d")
         codigo = generar_codigo_unico()
         
         # We get the output folder from the app config
         output_folder = current_app.config['UPLOAD_FOLDER']
-        crear_pdf(codigo, datos, output_folder) # Assuming crear_pdf takes the output path
         
+        # This is where the original error was (line 123)
+        crear_pdf(codigo, datos) 
+        
+        # This part is only reached if PDF creation is successful
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("""
@@ -132,7 +157,9 @@ def generar_y_guardar(datos, db_path):
         return {"status": "success", "codigo": codigo}
         
     except Exception as e:
-        conn.rollback()
+        # --- FIX #1: Check if conn exists before rolling back ---
+        if conn:
+            conn.rollback()
         return {"status": "error", "message": str(e)}
     finally:
         if conn:

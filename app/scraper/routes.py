@@ -72,7 +72,24 @@ def get_scout_data(cedula):
                 
                 full_name = name_strong_tag.parent.text.replace('Nombre Completo:', '').strip()
                 
-                # Parse the full_title_text
+                # --- NEW: Find Joven/Adulto ---
+                joven_adulto_tag = soup.find('strong', string='Joven/AdultT_Adulto:')
+                if not joven_adulto_tag:
+                    # Fallback for the exact string in the HTML sample
+                    joven_adulto_tag = soup.find('strong', string='Joven/Adulto:')
+                if not joven_adulto_tag:
+                    raise Exception("Could not find 'Joven/Adulto:' tag.")
+                
+                joven_adulto = joven_adulto_tag.parent.text.replace('Joven/Adulto:', '').strip()
+
+                # --- NEW: Find Status ---
+                status_tag = soup.find('strong', string='Status:')
+                if not status_tag:
+                    raise Exception("Could not find 'Status:' tag.")
+                
+                status = status_tag.parent.text.replace('Status:', '').strip()
+                
+                # 3. Parse the full_title_text (Grupo/Distrito/Region)
                 parts = full_title_text.split('/')
                 grupo = parts[0].replace('Grupo', '').strip()
                 distrito = parts[1].replace('Distrito', '').strip()
@@ -84,7 +101,9 @@ def get_scout_data(cedula):
                     "cedula": cedula,
                     "grupo": grupo,
                     "distrito": distrito,
-                    "region": region
+                    "region": region,
+                    "joven_adulto": joven_adulto, # NEW
+                    "status": status             # NEW
                 }
                 return jsonify(scout_data)
 

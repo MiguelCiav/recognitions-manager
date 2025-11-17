@@ -1,8 +1,10 @@
 import sqlite3
 import time
+import os
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from fillpdf import fillpdfs
+from flask import current_app
 
 def generar_codigo_unico():
     intentos = 3
@@ -36,7 +38,27 @@ def generar_codigo_unico():
 
 def crear_pdf(codigo_unico, datos):
 
-    fillpdfs.get_form_fields("static/FORMATO_RECONOCIMIENTO.pdf")
+    # --- THIS IS THE FIX ---
+    # Get the directory of the *current file* (generator.py)
+    # This will be /app/app/pdf/
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Go *up one level* (to /app/app/) and then into 'static'
+    # This path is now 100% reliable
+    static_dir = os.path.join(current_dir, '..', 'static')
+    
+    # Build the full path to the template
+    format_path = os.path.join(static_dir, "FORMATO_RECONOCIMIENTO.pdf")
+    
+    # Get the upload folder path (this one is fine)
+    output_path = os.path.join(current_app.config['UPLOAD_FOLDER'], f"{codigo_unico}.pdf")
+    # -----------------------
+
+    # This check is now very useful for debugging
+    if not os.path.exists(format_path):
+        raise FileNotFoundError(f"Template file not found at: {format_path}")
+
+    fillpdfs.get_form_fields(format_path)
 
     data_dict = {
         'fecha': datos['fecha_creacion'],
@@ -47,33 +69,12 @@ def crear_pdf(codigo_unico, datos):
         'region': datos["region"],
     }
 
-    fillpdfs.write_fillable_pdf('data/FORMATO_RECONOCIMIENTO.pdf', f"output/{codigo_unico}.pdf", data_dict)
-    fillpdfs.flatten_pdf(f"output/{codigo_unico}.pdf", f"output/{codigo_unico}.pdf", as_images=True)
+    fillpdfs.write_fillable_pdf(format_path, output_path, data_dict)
+    fillpdfs.flatten_pdf(output_path, output_path, as_images=True)
 
-    pdf_path = f"output/{codigo_unico}.pdf"
+    pdf_path = output_path
 
     return pdf_path
 
-def generar_y_guardar(datos):
-    try:
-        datos["fecha_creacion"] = datetime.now().strftime("%Y-%m-%d")
-        codigo = generar_codigo_unico()
-        crear_pdf(codigo, datos)
-        
-        conn = sqlite3.connect("data/reconocimientos.db")
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO reconocimientos 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (None, codigo, datos["fecha_creacion"], datos["nombres"], 
-             datos["cedula"], datos["grupo"], datos["distrito"], datos["region"]))
-        conn.commit()
-        
-        return {"status": "success", "codigo": codigo}
-        
-    except Exception as e:
-        conn.rollback()
-        return {"status": "error", "message": str(e)}
-    finally:
-        if 'conn' in locals() and conn:
-            conn.close()
+# --- DELETED THE DUPLICATE/BUGGY generar_y_guardar FUNCTION ---
+# It is correctly defined in routes.py

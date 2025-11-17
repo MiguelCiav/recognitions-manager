@@ -3,56 +3,72 @@
 {% block title %}Reconocimientos{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold text-center mb-4">Reconocimientos Generados</h1>
+<!-- Page Header -->
+<h1 class="text-3xl font-semibold text-slate-900 mb-6">Reconocimientos Generados</h1>
 
-<!-- Toast de confirmación -->
-<div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg hidden"></div>
-
-<!-- Filtros -->
-<div class="flex justify-between items-center mb-4">
-  <div class="flex items-center space-x-2">
-    <span class="text-sm text-gray-600">Filtrar por:</span>
-    <select id="filter-region" class="border border-gray-300 rounded-lg p-2">
-      <option value="">Todas las Regiones</option>
-      <option>Norte</option>
-      <option>Sur</option>
-    </select>
-    <input type="text" id="search" placeholder="Buscar por cédula..." class="border border-gray-300 rounded-lg p-2">
-  </div>
+<!-- Toast/Notification -->
+<div id="toast" class="fixed bottom-6 right-6 bg-green-600 text-white py-3 px-5 rounded-lg shadow-xl hidden animate-pulse">
+    <!-- JS will populate this -->
 </div>
 
-<!-- Tabla de Resultados -->
-<div class="bg-white shadow-md rounded-lg overflow-hidden">
-  <table class="min-w-full leading-normal">
-    <thead>
-      <tr>
-        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Código</th>
-        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
-        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cédula</th>
-        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Grupo</th>
-        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Distrito</th>
-        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PDF</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for reconocimiento in reconocimientos %}
-      <tr class="hover:bg-gray-100">
-        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">{{ reconocimiento[1] }}</td>
-        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">{{ reconocimiento[3] }}</td>
-        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm cedula">{{ reconocimiento[4] }}</td>
-        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">{{ reconocimiento[5] }}</td>
-        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm region">{{ reconocimiento[6] }}</td>
-        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-          <a href="/output/{{ reconocimiento[1] }}.pdf" target="_blank" class="text-blue-500 hover:text-blue-800">Descargar</a>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<!-- Filter and Search Bar -->
+<div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+            <label for="filter-region" class="text-sm font-medium text-slate-600">Filtrar por Región:</label>
+            <select id="filter-region" class="w-full sm:w-auto p-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Todas las Regiones</option>
+                <option>Norte</option>
+                <option>Sur</option>
+                <!-- Add more regions dynamically if needed -->
+            </select>
+        </div>
+        <div class="w-full sm:w-auto">
+            <input type="text" id="search" placeholder="Buscar por cédula..." class="w-full sm:w-64 p-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <!-- Responsive wrapper -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Código</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nombre</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Cédula</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Grupo</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Distrito</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Acción</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-200">
+                {% for reconocimiento in reconocimientos %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ reconocimiento[1] }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ reconocimiento[3] }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 cedula">{{ reconocimiento[4] }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ reconocimiento[5] }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 region">{{ reconocimiento[6] }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <a href="/output/{{ reconocimiento[1] }}.pdf" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors">
+                            Descargar
+                            <svg class="ml-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-  // Filtro dinámico
+  // Dynamic filtering script
   document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("search");
     const regionFilter = document.getElementById("filter-region");
@@ -68,7 +84,7 @@
         const matchSearch = cedula.includes(searchTerm);
         const matchRegion = region === "" || regionRow === region;
 
-        row.style.display = matchSearch && matchRegion ? "" : "none";
+        row.style.display = matchSearch && matchRegion ? "" : "table-row";
       });
     }
 
@@ -76,15 +92,21 @@
     regionFilter.addEventListener("change", filterTable);
   });
 
-  // Mostrar toast si hay éxito en la generación
+  // Toast notification script
   const urlParams = new URLSearchParams(window.location.search);
   const successCount = urlParams.get("success");
 
   if (successCount) {
     const toast = document.getElementById("toast");
     toast.textContent = `✅ Se generaron ${successCount} reconocimientos exitosamente`;
-    toast.classList.remove("hidden");
-    setTimeout(() => toast.classList.add("hidden"), 3000);
+    toast.classList.remove("hidden", "animate-pulse");
+    toast.classList.add("opacity-100");
+    setTimeout(() => {
+        toast.classList.add("opacity-0", "transition-opacity", "duration-1000");
+    }, 4000);
+    setTimeout(() => {
+        toast.classList.add("hidden");
+    }, 5000); // Hide after fade out
   }
 </script>
 {% endblock %}
