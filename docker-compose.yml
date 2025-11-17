@@ -1,21 +1,19 @@
-version: '3.8'
 services:
   web:
     build: .
+    # --- THIS IS THE FAILSAFE FIX ---
+    # 1. We run 'npm install' every time the container starts.
+    #    This ensures 'concurrently' and 'tailwindcss' are always
+    #    in node_modules, even if the image build is stale.
+    # 2. Then we run the 'dev' script.
+    command: sh -c "npm install && npm run dev"
     ports:
       - "5000:5000"
     volumes:
+      # Mount the entire project directory
       - .:/app
-      - ./output:/app/output
-      - ./data:/app/data
-  vite:
-    image: node:18
-    working_dir: /app
-    # Install dependencies then start Vite dev server (HMR) for development.
-    command: bash -lc "cd frontend && npm install && npm run dev"
-    ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
+      # Preserve node_modules from the 'npm install'
+      - /app/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - FLASK_DEBUG=1
+      - FLASK_APP=run.py

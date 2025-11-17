@@ -1,18 +1,35 @@
-# Start with a base that has Python
-FROM python:3.9-slim
+# Use an official Python runtime as a parent image
+FROM python:3.11-slim
 
-# Set the working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Install Python dependencies
+# --- Node.js & Tailwind Setup ---
+RUN apt-get update && \
+    apt-get install -y curl gpg && \
+    curl -sL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs build-essential && \
+    # Clean up apt caches
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# --- Python Dependencies ---
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# --- Node.js Dependencies (including concurrently) ---
+COPY package.json package-lock.json* ./
+COPY tailwind.config.js .
+RUN mkdir -p /app/app/static/css
+COPY app/static/css/input.css ./app/static/css/input.css
+# Install deps and fix browserslist warning
+RUN npm install && npx update-browserslist-db@latest
+
+# --- Application Code ---
 COPY . .
 
-# Expose Flask port and run the app. Frontend assets are built by the
-# separate `vite` service defined in docker-compose; the built files
-# are placed under app/static/dist and served by Flask's static route.
+# Expose the port the app runs on
 EXPOSE 5000
-CMD ["python", "run.py"]
+
+# Set the new default command
+CMD ["npm", "run", "dev"]
