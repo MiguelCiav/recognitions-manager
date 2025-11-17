@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Carga de Datos - Scout Manager</title>
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <style>
         /* ... estilos anteriores ... */
         .progress-bar {
@@ -56,7 +57,7 @@
     </div>
 
     <!-- Formulario Manual -->
-    <div class="section">
+    <div class="section bg-amber-300">
         <h2>Ingreso Manual</h2>
         <form id="manualForm" action="/generar" method="POST">
             <input type="text" name="nombres" placeholder="Nombres" required>
